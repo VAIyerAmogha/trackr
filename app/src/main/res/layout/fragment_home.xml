@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/etHabitName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter habit name" />
+
+        <Spinner
+            android:id="@+id/spinnerFrequency"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <TimePicker
+            android:id="@+id/timePickerReminder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btnAddHabit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Habit"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Habits:"
+            android:textSize="18sp"
+            android:layout_marginTop="12dp"
+            android:textStyle="bold" />
+
+        <ListView
+            android:id="@+id/listHabits"
+            android:layout_width="match_parent"
+            android:layout_height="100sp"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+</ScrollView>
