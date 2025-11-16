@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "trackr.db";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     // Table names
     private static final String TABLE_HABITS = "habits";
@@ -42,6 +42,13 @@ public class DBHelper extends SQLiteOpenHelper {
                 "start_date TEXT, " +
                 "current_streak INTEGER, " +
                 "longest_streak INTEGER)";
+
+        String createDayCheckmarks = "CREATE TABLE day_checkmarks (" +
+                "date TEXT PRIMARY KEY, " +
+                "success INTEGER)";
+
+        db.execSQL(createDayCheckmarks);
+
 
         db.execSQL(createHabits);
         db.execSQL(createProgress);
@@ -167,6 +174,11 @@ public class DBHelper extends SQLiteOpenHelper {
         } else {
             db.insert("streaks", null, cv);
         }
+
+        if (successful) {
+            markDaySuccess(getCurrentDate());
+        }
+
         db.close();
     }
 
@@ -187,5 +199,33 @@ public class DBHelper extends SQLiteOpenHelper {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
         return sdf.format(new java.util.Date());
     }
+
+    public void markDaySuccess(String date) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("date", date);
+        cv.put("success", 1);
+        db.insertWithOnConflict("day_checkmarks", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public boolean isDayMarked(String date) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT success FROM day_checkmarks WHERE date=?",
+                new String[]{date});
+        boolean result = cursor.moveToFirst();
+        cursor.close();
+        return result;
+    }
+
+    public void toggleDaySuccess(String date) {
+        if (isDayMarked(date)) {
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.delete("day_checkmarks", "date=?", new String[]{date});
+            db.close();
+        } else {
+            markDaySuccess(date);
+        }
+    }
+
 
 }

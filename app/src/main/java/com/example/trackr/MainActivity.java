@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new ProfileFragment();
             } else if (id == R.id.navigation_progress) {
                 selectedFragment = new ProgressFragment();
+            } else if (id == R.id.nav_calendar) {
+                selectedFragment = new CalendarFragment();
             }
 
             getSupportFragmentManager().beginTransaction()
