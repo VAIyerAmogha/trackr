@@ -61,14 +61,12 @@ public class HomeFragment extends Fragment {
         habitsList = new ArrayList<>();
         habitIds = new ArrayList<>();
 
-        // Frequency options
         String[] frequencies = {"Daily", "Weekly", "Monthly"};
         ArrayAdapter<String> freqAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item, frequencies);
         freqAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerFrequency.setAdapter(freqAdapter);
 
-        // ListView setup
         listAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_list_item_1, habitsList);
         listHabits.setAdapter(listAdapter);
@@ -106,7 +104,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        long result = dbHelper.addHabit(name, "🔥", frequency);
+        long result = dbHelper.addHabit(name, "🔥", frequency, hour, minute);
 
         if (result != -1) {
             ReminderUtils.scheduleHabitReminder(getContext(), name, hour, minute);

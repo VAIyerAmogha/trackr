@@ -9,12 +9,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "trackr.db";
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 3; // Incremented DB version
 
     // Table names
     private static final String TABLE_HABITS = "habits";
     private static final String TABLE_PROGRESS = "habit_progress";
     private static final String TABLE_STREAKS = "streaks";
+    private static final String TABLE_JOURNALS = "journals"; // New journals table
 
     public DBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -43,33 +44,38 @@ public class DBHelper extends SQLiteOpenHelper {
                 "current_streak INTEGER, " +
                 "longest_streak INTEGER)";
 
-        String createDayCheckmarks = "CREATE TABLE day_checkmarks (" +
+        String createJournals = "CREATE TABLE " + TABLE_JOURNALS + " (" +
                 "date TEXT PRIMARY KEY, " +
-                "success INTEGER)";
-
-        db.execSQL(createDayCheckmarks);
-
+                "entry TEXT)";
 
         db.execSQL(createHabits);
         db.execSQL(createProgress);
         db.execSQL(createStreaks);
+        db.execSQL(createJournals);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_HABITS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PROGRESS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_STREAKS);
-        onCreate(db);
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE " + TABLE_HABITS + " ADD COLUMN reminder_hour INTEGER");
+            db.execSQL("ALTER TABLE " + TABLE_HABITS + " ADD COLUMN reminder_minute INTEGER");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("CREATE TABLE " + TABLE_JOURNALS + " (" +
+                    "date TEXT PRIMARY KEY, " +
+                    "entry TEXT)");
+        }
     }
 
 
-    public long addHabit(String name, String icon, String frequency) {
+    public long addHabit(String name, String icon, String frequency, int hour, int minute) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("name", name);
         cv.put("icon", icon);
         cv.put("frequency", frequency);
+        cv.put("reminder_hour", hour);
+        cv.put("reminder_minute", minute);
         long id = db.insert(TABLE_HABITS, null, cv);
         db.close();
         return id;
@@ -174,11 +180,6 @@ public class DBHelper extends SQLiteOpenHelper {
         } else {
             db.insert("streaks", null, cv);
         }
-
-        if (successful) {
-            markDaySuccess(getCurrentDate());
-        }
-
         db.close();
     }
 
@@ -200,32 +201,26 @@ public class DBHelper extends SQLiteOpenHelper {
         return sdf.format(new java.util.Date());
     }
 
-    public void markDaySuccess(String date) {
+    // --- JOURNAL METHODS ---
+
+    public void addJournalEntry(String date, String entry) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("date", date);
-        cv.put("success", 1);
-        db.insertWithOnConflict("day_checkmarks", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+        cv.put("entry", entry);
+        db.insertWithOnConflict(TABLE_JOURNALS, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+        db.close();
     }
 
-    public boolean isDayMarked(String date) {
+    public String getJournalEntry(String date) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT success FROM day_checkmarks WHERE date=?",
-                new String[]{date});
-        boolean result = cursor.moveToFirst();
-        cursor.close();
-        return result;
-    }
-
-    public void toggleDaySuccess(String date) {
-        if (isDayMarked(date)) {
-            SQLiteDatabase db = this.getWritableDatabase();
-            db.delete("day_checkmarks", "date=?", new String[]{date});
-            db.close();
-        } else {
-            markDaySuccess(date);
+        Cursor cursor = db.rawQuery("SELECT entry FROM " + TABLE_JOURNALS + " WHERE date=?", new String[]{date});
+        String entry = null;
+        if (cursor.moveToFirst()) {
+            entry = cursor.getString(cursor.getColumnIndexOrThrow("entry"));
         }
+        cursor.close();
+        db.close();
+        return entry;
     }
-
-
 }

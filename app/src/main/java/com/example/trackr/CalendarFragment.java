@@ -15,7 +15,7 @@ import java.util.Locale;
 public class CalendarFragment extends Fragment {
 
     CalendarView calendarView;
-    TextView textStatus, textMonthSummary;
+    TextView textStatus, textMonthSummary, textJournalEntry;
     DBHelper dbHelper;
     String selectedDate = "";
 
@@ -27,11 +27,22 @@ public class CalendarFragment extends Fragment {
         calendarView = view.findViewById(R.id.calendarView);
         textStatus = view.findViewById(R.id.textSelectedStatus);
         textMonthSummary = view.findViewById(R.id.textMonthSummary);
+        textJournalEntry = view.findViewById(R.id.textJournalEntry);
 
         dbHelper = new DBHelper(getContext());
 
-        calendarView.setOnDateChangeListener((view1, year, month, day) -> {
-            selectedDate = year + "-" + format(month + 1) + "-" + format(day);
+        // Set initial date
+        long initialDate = calendarView.getDate();
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(initialDate);
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        selectedDate = year + "-" + format(month + 1) + "-" + format(day);
+        showStatus();
+
+        calendarView.setOnDateChangeListener((view1, year1, month1, day1) -> {
+            selectedDate = year1 + "-" + format(month1 + 1) + "-" + format(day1);
             showStatus();
         });
 
@@ -40,11 +51,20 @@ public class CalendarFragment extends Fragment {
     }
 
     private void showStatus() {
-        boolean marked = dbHelper.isDayMarked(selectedDate);
+        boolean marked = dbHelper.isDaySuccessful(selectedDate);
+        String journalEntry = dbHelper.getJournalEntry(selectedDate);
+
         if (marked) {
-            textStatus.setText("❌ Marked complete for: " + selectedDate);
+            textStatus.setText("✅ Day Completed!");
         } else {
-            textStatus.setText("Not completed: " + selectedDate);
+            textStatus.setText("❌ Day Incomplete");
+        }
+
+        if (journalEntry != null) {
+            textJournalEntry.setText("📝: " + journalEntry);
+            textJournalEntry.setVisibility(View.VISIBLE);
+        } else {
+            textJournalEntry.setVisibility(View.GONE);
         }
     }
 
@@ -62,12 +82,15 @@ public class CalendarFragment extends Fragment {
         for (int day = 1; day <= daysInMonth; day++) {
             String date = year + "-" + format(month) + "-" + format(day);
 
-            if (dbHelper.isDayMarked(date)) {
+            if (dbHelper.isDaySuccessful(date)) {
                 success++;
-            } else if (date.compareTo(today) < 0) { // date has passed
-                failed++;
             } else {
-                noData++;
+                // Check if the date is in the past
+                if (date.compareTo(today) < 0) {
+                    failed++;
+                } else {
+                    noData++;
+                }
             }
         }
 

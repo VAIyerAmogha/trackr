@@ -16,6 +16,15 @@
     <ListView
         android:id="@+id/listProgress"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:dividerHeight="8dp" />
+
+    <Button
+        android:id="@+id/btnAddJournal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Journal Entry"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"/>
 </LinearLayout>
